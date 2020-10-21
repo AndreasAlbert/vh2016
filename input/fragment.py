@@ -9,49 +9,23 @@ externalLHEProducer = cms.EDProducer("ExternalLHEProducer",
     outputFile = cms.string('cmsgrid_final.lhe'),
     scriptName = cms.FileInPath('GeneratorInterface/LHEInterface/data/run_generic_tarball_cvmfs.sh')
 )
+import FWCore.ParameterSet.Config as cms
 
-generator = cms.EDFilter("Pythia6HadronizerFilter",
-    ExternalDecays = cms.PSet(
-        Tauola = cms.untracked.PSet(
-            UseTauolaPolarization = cms.bool(True),
-            InputCards = cms.PSet(
-                mdtau = cms.int32(0),
-                pjak2 = cms.int32(0),
-                pjak1 = cms.int32(0)
-            )
-        ),
-        parameterSets = cms.vstring('Tauola')
-    ),
+from Configuration.Generator.Pythia8CommonSettings_cfi import *
+from Configuration.Generator.Pythia8CUEP8M1Settings_cfi import *
+
+generator = cms.EDFilter("Pythia8HadronizerFilter",
+    maxEventsToPrint = cms.untracked.int32(1),
     pythiaPylistVerbosity = cms.untracked.int32(1),
     filterEfficiency = cms.untracked.double(1.0),
     pythiaHepMCVerbosity = cms.untracked.bool(False),
-    comEnergy = cms.double(13000.0),
-    maxEventsToPrint = cms.untracked.int32(0),
+    comEnergy = cms.double(13000.),
     PythiaParameters = cms.PSet(
-        pythiaUESettingsBlock,
-        processParameters = cms.vstring('MSEL=0           ! User defined processes',
-            'PMAS(5,1)=4.75   ! b quark mass',
-            'PMAS(6,1)=172.5  ! t quark mass',
-            'MDCY(25,1)=0     !All Higgs decays switched off',
-            'MDME(210,1)=0    ! Higgs decay into dd',
-            'MDME(211,1)=0    ! Higgs decay into uu',
-            'MDME(212,1)=0    ! Higgs decay into ss',
-            'MDME(213,1)=0    ! Higgs decay into cc',
-            'MDME(214,1)=0    ! Higgs decay into bb',
-            'MDME(215,1)=0    ! Higgs decay into tt',
-            'MDME(216,1)=0    ! Higgs decay into bbbar prime',
-            'MDME(217,1)=0    ! Higgs decay into ttbar prime',
-            'MDME(218,1)=0    ! Higgs decay into e e',
-            'MDME(219,1)=0    ! Higgs decay into mu mu',
-            'MDME(220,1)=0    ! Higgs decay into tau tau',
-            'MDME(221,1)=0    ! Higgs decay into tau tau prime',
-            'MDME(222,1)=0    ! Higgs decay into g g',
-            'MDME(223,1)=0    ! Higgs decay into gam gam',
-            'MDME(224,1)=0    ! Higgs decay into gam Z',
-            'MDME(225,1)=0    ! Higgs decay into Z Z',
-            'MDME(226,1)=0    ! Higgs decay into W W'),
-        # This is a vector of ParameterSet names to be read, in this order                                                                                                                                                       
-        parameterSets = cms.vstring('pythiaUESettings',
-            'processParameters')
-    ),
+        pythia8CommonSettingsBlock,
+        pythia8CUEP8M1SettingsBlock,
+        parameterSets = cms.vstring('pythia8CommonSettings',
+                                    'pythia8CUEP8M1Settings',
+                                    )
+    )
 )
+

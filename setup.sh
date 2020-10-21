@@ -26,27 +26,53 @@ scram b -j4
 
 cd $WDIR
 
-NEVENTS=500
-NTHREADS=1
+NEVENTS=10000
+NTHREADS=4
 SEED=${RANDOM}
-for FRAGMENT in ${CMSSW_BASE}/src/Configuration/GenProduction/python/*_cff.py; do
+
+# JHU
+for FRAGMENT in ${CMSSW_BASE}/src/Configuration/GenProduction/python/*JHU*_cff.py; do
     NAME=$(basename ${FRAGMENT} | sed "s/_cff.py//")
-    # cmsDriver.py Configuration/GenProduction/python/$(basename $FRAGMENT) \
-    # --fileout file:wmLHEG_${NAME}.root \
-    # --mc \
-    # --eventcontent RAWSIM,LHE \
-    # --datatier GEN,LHE \
-    # --conditions 93X_mc2017_realistic_v3 \
-    # --beamspot Realistic25ns13TeVEarly2017Collision \
-    # --step LHE,GEN \
-    # --nThreads ${NTHREADS} \
-    # --geometry DB:Extended \
-    # --era Run2_2017  \
-    # --python_filename wmLHEG_${NAME}_cfg.py \
-    # --no_exec \
-    # --customise Configuration/DataProcessing/Utils.addMonitoring \
-    # --customise_commands process.RandomNumberGeneratorService.externalLHEProducer.initialSeed="${SEED}" \
-    # -n ${NEVENTS};
+    cmsDriver.py Configuration/GenProduction/python/$(basename $FRAGMENT) \
+    --fileout file:NANOGEN_${NAME}.root \
+    --mc \
+    --eventcontent NANOAODSIM \
+    --datatier NANOAOD \
+    --conditions auto:mc \
+    --step LHE,GEN,NANOGEN \
+    --nThreads ${NTHREADS} \
+    --era Run2_2017  \
+    --python_filename wmLHEG_${NAME}_cfg.py \
+    --no_exec \
+    --customise_commands 'process.load("FWCore.MessageService.MessageLogger_cfi")' \
+    --customise_commands 'process.MessageLogger.destinations = ["cout", "cerr"]' \
+    --customise_commands 'process.MessageLogger.cerr.FwkReport.reportEvery = 100' \
+    --customise_commands process.RandomNumberGeneratorService.externalLHEProducer.initialSeed="${SEED}" \
+    -n ${NEVENTS};
+
+    RUNNER="run_${NAME}.sh"
+    echo "cd ${CMSSW_RELEASE_BASE}/src" > ${RUNNER}
+    echo 'eval `scram runtime -sh`' >> ${RUNNER}
+    echo "cd ${WDIR}" >> ${RUNNER}
+    echo "cmsRun  wmLHEG_${NAME}_cfg.py" >> ${RUNNER}
+
+done
+
+
+# POWHEG
+
+
+
+curl -s -k https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_fragment/HIG-RunIIFall17wmLHEGS-03386 -o ${CMSSW_BASE}/src/Configuration/GenProduction/python/ZH_ph_cff.py
+
+curl -s -k https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_fragment/HIG-RunIIFall17wmLHEGS-03384 -o ${CMSSW_BASE}/src/Configuration/GenProduction/python/WminusH_ph_cff.py
+
+curl -s -k https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_fragment/HIG-RunIIFall17wmLHEGS-03385 -o ${CMSSW_BASE}/src/Configuration/GenProduction/python/WplusH_ph_cff.py
+
+
+# JHU
+for FRAGMENT in ${CMSSW_BASE}/src/Configuration/GenProduction/python/*ph*_cff.py; do
+    NAME=$(basename ${FRAGMENT} | sed "s/_cff.py//")
     cmsDriver.py Configuration/GenProduction/python/$(basename $FRAGMENT) \
     --fileout file:NANOGEN_${NAME}.root \
     --mc \
